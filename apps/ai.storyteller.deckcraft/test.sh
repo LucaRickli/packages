@@ -9,13 +9,15 @@
 #   - Every library they link loads from the runtime. So does every one that
 #     DeckCraft loads by name when it starts (each soname it names).
 #   - The desktop file starts the app and has its icon.
+#   - The update check is off. CRAFT_VERSIONS_FILE names /app's file, which
+#     keeps DeckCraft on this version, and DeckCraft still names it.
 #   - deckcraft-cli works without a display. A deck made here with a new
 #     titled slide, saved as DeckCraft's own file, has that slide second
 #     (after the title slide). Saved as PowerPoint and read back, it still
 #     does. Its slide, drawn, is a PNG of 960x540 pt at 2 px/pt.
 set -eu
 
-# --- The app, its libraries, its desktop file ---
+# --- The app, its libraries, its desktop file, its update check ---
 id=ai.storyteller.deckcraft
 bins="/app/bin/deckcraft /app/bin/deckcraft-cli"
 version=$(sed -n 's|.*<release version="\([^"]*\)".*|\1|p' "/app/share/metainfo/$id.metainfo.xml" | head -n 1)
@@ -43,6 +45,16 @@ desktop=/app/share/applications/$id.desktop
 test "$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' "$desktop")" = deckcraft
 test "$(sed -n 's/^Icon=//p' "$desktop")" = "$id"
 test -s "/app/share/icons/hicolor/scalable/apps/$id.svg"
+# The update check is off. A wrong path, file or app name would turn it
+# back on, and nothing would say so: craft-update reads them all as "follow
+# the releases".
+test "${CRAFT_VERSIONS_FILE-}" = /app/share/craft/versions.json
+python3 -c '
+import json, sys
+apps = json.load(open(sys.argv[1]))["apps"]
+want = {sys.argv[2]: {"Pinned": "v" + sys.argv[3]}}
+sys.exit(None if apps == want else "%s: %s, not %s" % (sys.argv[1], apps, want))' "$CRAFT_VERSIONS_FILE" deckcraft "$version"
+grep -aqF CRAFT_VERSIONS_FILE /app/bin/deckcraft
 
 # --- deckcraft-cli without a display ---
 cd "$(mktemp -d)"
@@ -67,4 +79,4 @@ test "$(head -c 2 deck.pptx)" = PK
 test "$(titles deck.pptx)" = "$(printf '\nQ3 results')"
 deckcraft-cli render deck.pptx --slide 1 slide.png >/dev/null
 test "$(size slide.png)" = 1920x1080
-echo "deckcraft $version: libraries, desktop file; a deck made, saved as DeckCraft and PowerPoint, read back, drawn"
+echo "deckcraft $version: libraries, desktop file, update check off; a deck made, saved as DeckCraft and PowerPoint, read back, drawn"

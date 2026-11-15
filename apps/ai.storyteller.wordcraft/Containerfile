@@ -9,7 +9,9 @@
 # from upstream's Flatpak is the runtime, Fedora's packages for Flathub's
 # Freedesktop runtime, and with it lp, lpstat and lpoptions: the runtime's
 # cups-client, where upstream builds CUPS' into /app (the printing
-# permissions, below). The labels of the flatpak stage have the
+# permissions, below); and that its update check is off, through a file of
+# ours in /app, and so are the network and the host commands it uses (the
+# updates label, below). The labels of the flatpak stage have the
 # permissions, the test stage the test (test.sh). The four Craft apps
 # (apps/ai.storyteller.*) are one Containerfile each, line for line the
 # same but for the app and its permissions.
@@ -49,14 +51,21 @@ RUN set -eux; \
     tar -xzf "$tarball" -C /app --strip-components=1 --no-same-owner; \
     cd /; rm -rf "$work"
 
+# The file of the updates label (below), as the ArtCraft Launcher writes it
+# for an app it keeps on a version: WordCraft, on this one.
+RUN install -d /app/share/craft \
+    && printf '{"apps":{"wordcraft":{"Pinned":"v%s"}}}\n' "$WORDCRAFT_VERSION" \
+        > /app/share/craft/versions.json
+
 # The app as it will run: WordCraft and wordcraft-cli start, and are this
 # version; every library they link is the runtime's, and so is every one
 # WordCraft loads by name when it starts, which ldd does not see and which
 # are most of them (winit's Wayland, X11 and xkbcommon, the renderer's EGL,
 # GL or Vulkan, D-Bus): each soname the binaries name, loaded as dlopen
 # loads it. lp, lpstat and lpoptions, which it runs to print, are the
-# runtime's; the desktop file is valid. The test checks them in the sandbox
-# again.
+# runtime's; the desktop file is valid; WordCraft still names
+# CRAFT_VERSIONS_FILE, without which the updates label would turn nothing
+# off, and nothing would say so. The test checks them in the sandbox again.
 RUN set -eux; \
     for bin in wordcraft wordcraft-cli; do \
         set -- $("/app/bin/$bin" --version); test "$2" = "$WORDCRAFT_VERSION"; \
@@ -65,7 +74,8 @@ RUN set -eux; \
     python3 -c 'import ctypes, sys; [ctypes.CDLL(n) for n in sys.argv[1:]]' \
         $(grep -aohE 'lib[A-Za-z0-9_+-]+\.so\.[0-9]+' /app/bin/wordcraft /app/bin/wordcraft-cli | sort -u); \
     for tool in lp lpstat lpoptions; do command -v "$tool"; done; \
-    desktop-file-validate /app/share/applications/ai.storyteller.wordcraft.desktop
+    desktop-file-validate /app/share/applications/ai.storyteller.wordcraft.desktop; \
+    grep -aqF CRAFT_VERSIONS_FILE /app/bin/wordcraft
 
 # --- the app: /app, nothing else, and the flatpak.* labels ------------------
 # FROM scratch, so that none of the runtime image's labels (its ID, its
@@ -83,7 +93,9 @@ LABEL flatpak.id=ai.storyteller.wordcraft \
 
 # The permissions of upstream's Flatpak, the finish-args of its manifests
 # (the bundle's and the from-source one, the same), one group for each of
-# upstream's reasons.
+# upstream's reasons, less the three that serve its update check: the
+# network, host commands and the ArtCraft Launcher's file (the updates
+# label, below).
 #
 # The display: Wayland, and X11 only where there is no Wayland, with X11's
 # shared memory (ipc), without which the X11 fallback is slow or fails.
@@ -99,10 +111,10 @@ LABEL flatpak.finish-args.gpu=--device=dri
 # driverless network printers through Avahi (lpstat -e); without them the
 # Print dialog lists no printers. The user's CUPS settings, read-only: the
 # default printer and saved options (lpoptions), and a print server their
-# client.conf names, which lp reaches over the network. A client.conf that
-# names another socket (ServerName /path), which flatpak mounts in the same
-# place, the runtime's lp misses (it dials that path); upstream's own lp
-# has a wrapper for it.
+# client.conf names, which lp reaches over the network, so only with the
+# network back (below). A client.conf that names another socket
+# (ServerName /path), which flatpak mounts in the same place, the runtime's
+# lp misses (it dials that path); upstream's own lp has a wrapper for it.
 LABEL flatpak.finish-args.printing="\
     --socket=cups \
     --system-talk-name=org.freedesktop.Avahi \
@@ -114,19 +126,29 @@ LABEL flatpak.finish-args.printing="\
 # (the command line, Open Recent, Save next to the original).
 LABEL flatpak.finish-args.files="--filesystem=xdg-documents --filesystem=xdg-pictures"
 
-# The network: the update check asks GitHub for the latest release (a copy
-# from a repository never updates itself, craft-update leaves it to the
-# repository). The host's network, so the --control server, when started,
-# on 127.0.0.1 is on the host's too.
-LABEL flatpak.finish-args.network=--share=network
+# The update check, off. The Flatpak brings WordCraft's updates, and a copy
+# from a repository never updates itself (craft-update leaves it to the
+# repository): the prompt it opens at start whenever GitHub has a newer
+# release would only offer its download page. CRAFT_VERSIONS_FILE names
+# the file the ArtCraft Launcher writes for an app it keeps on a version,
+# in place of the launcher's own (ArtCraft/versions in the host's data dir,
+# which upstream grants read-only): /app's, which keeps WordCraft on this
+# one (the build stage). craft-update reads it before it asks GitHub, and
+# then asks nothing; Check for Updates… says that WordCraft "follows the
+# version chosen in the launcher".
+LABEL flatpak.finish-args.updates=--env=CRAFT_VERSIONS_FILE=/app/share/craft/versions.json
 
-# The ArtCraft Launcher's ArtCraft/versions/versions.json in the host's
-# data dir, read-only: the version the launcher keeps each Craft app on, so
-# that an app's own update check offers none it manages. Read by
-# craft-update since craft-libs 7d303b4, not yet by this release's
-# (04aa170); granted as upstream does, so the release that reads it needs
-# no change here.
-LABEL flatpak.finish-args.launcher=--filesystem=xdg-data/ArtCraft/versions:ro
+# Not granted, where upstream grants them:
+# - The network, for the update check, and so that the --control server,
+#   when started, is on the host's 127.0.0.1. Nothing else needs it but
+#   what reaches out when asked to: installing Language packs (spelling and
+#   hyphenation for other languages, from GitHub), Zotero on the host, the
+#   --control server from the host or another flatpak run, and a print
+#   server in ~/.cups/client.conf. README.md has the override that grants
+#   it.
+# - org.freedesktop.Flatpak, any command on the host, through which
+#   craft-update asks the host's flatpak whether this copy is a bundle it
+#   may replace, and installs one. A copy from a repository never is.
 
 # --- the test: the app, its ID and its permissions, with test.sh as its
 # command, which flatpak.sh test runs in the installed app's sandbox ---------

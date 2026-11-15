@@ -7,7 +7,10 @@ environment of its own (outside VS Code: `flatpak run --command=fish
 io.github.lucarickli.Code`). Unlike Flathub's `com.visualstudio.code`, which
 downloads VS Code on each machine at install and runs on Flathub's runtime,
 the image carries VS Code, Microsoft's RPM checked against Microsoft's
-signature, as CI built and tested it, and host access is an opt-in.
+signature, as CI built and tested it, and host access is an opt-in. Its
+own update check is off (`--disable-updates`), and so are the bundled
+tools' (sops, trivy, Radar; the Go extension's in a new profile): the
+Flatpak brings their updates.
 
 Two variants of the one app, `io.github.lucarickli.Code//stable`: plain
 (`ghcr.io/lucarickli/code:latest`) and `ai` (`:ai`), plain with Claude Code,
@@ -39,8 +42,9 @@ Host access lets Dev Containers and the app's `podman`, `docker`, `qemu-img`,
 `qemu-system-x86_64` and `bcvk` run on the host, through host-spawn (without
 it they say how to grant it), and with them every extension, task and
 terminal, as you: as trusted as a VS Code on the host. A new profile starts
-with `"dev.containers.dockerPath": "podman"` and
-`"dev.containers.mountWaylandSocket": false`; add them to an existing
+with `"dev.containers.dockerPath": "podman"`,
+`"dev.containers.mountWaylandSocket": false` and
+`"go.toolsManagement.checkForUpdates": "off"`; add them to an existing
 `settings.json`.
 
 ```sh

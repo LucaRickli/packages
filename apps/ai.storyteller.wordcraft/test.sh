@@ -12,13 +12,15 @@
 #     socket their libcups dials is the one flatpak mounts,
 #     /var/run/cups/cups.sock.
 #   - The desktop file starts the app and has its icon.
+#   - The update check is off. CRAFT_VERSIONS_FILE names /app's file, which
+#     keeps WordCraft on this version, and WordCraft still names it.
 #   - wordcraft-cli works without a display, in en_US (US Letter). Markdown
 #     with a heading and a line, made here and saved as a Word document,
 #     has that text in two paragraphs on one page. Saved as a PDF, it is a
 #     PDF. Drawn, it is a PNG of the page, 612x792 pt at 2 px/pt.
 set -eu
 
-# --- The app, its libraries, printing, its desktop file ---
+# --- The app, its libraries, printing, its desktop file, its update check ---
 id=ai.storyteller.wordcraft
 bins="/app/bin/wordcraft /app/bin/wordcraft-cli"
 version=$(sed -n 's|.*<release version="\([^"]*\)".*|\1|p' "/app/share/metainfo/$id.metainfo.xml" | head -n 1)
@@ -53,6 +55,16 @@ desktop=/app/share/applications/$id.desktop
 test "$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' "$desktop")" = wordcraft
 test "$(sed -n 's/^Icon=//p' "$desktop")" = "$id"
 test -s "/app/share/icons/hicolor/scalable/apps/$id.svg"
+# The update check is off. A wrong path, file or app name would turn it
+# back on, and nothing would say so: craft-update reads them all as "follow
+# the releases".
+test "${CRAFT_VERSIONS_FILE-}" = /app/share/craft/versions.json
+python3 -c '
+import json, sys
+apps = json.load(open(sys.argv[1]))["apps"]
+want = {sys.argv[2]: {"Pinned": "v" + sys.argv[3]}}
+sys.exit(None if apps == want else "%s: %s, not %s" % (sys.argv[1], apps, want))' "$CRAFT_VERSIONS_FILE" wordcraft "$version"
+grep -aqF CRAFT_VERSIONS_FILE /app/bin/wordcraft
 
 # --- wordcraft-cli without a display ---
 cd "$(mktemp -d)"
@@ -78,4 +90,4 @@ wordcraft-cli convert doc.docx doc.pdf >/dev/null
 test "$(head -c 5 doc.pdf)" = %PDF-
 wordcraft-cli render doc.docx page.png >/dev/null
 test "$(size page.png)" = 1224x1584
-echo "wordcraft $version: libraries, printing tools, desktop file; Markdown to Word, text, info, PDF and PNG"
+echo "wordcraft $version: libraries, printing tools, desktop file, update check off; Markdown to Word, text, info, PDF and PNG"

@@ -126,6 +126,16 @@ ENV MISE_AUTO_INSTALL=0 \
     MISE_USE_VERSIONS_HOST_TRACK=0 \
     MISE_PARANOID=1
 
+# The tools are the image's version, so none looks for a newer one (sops
+# --version, trivy after every scan, kubectl radar's web UI), as
+# DENO_NO_UPDATE_CHECK does for Deno; TRIVY_DISABLE_TELEMETRY too, without
+# which trivy still asks, for its telemetry. The VS Code Flatpak sets the
+# same (apps/io.github.lucarickli.Code/Containerfile).
+ENV SOPS_DISABLE_VERSION_CHECK=1 \
+    TRIVY_SKIP_VERSION_CHECK=1 \
+    TRIVY_DISABLE_TELEMETRY=1 \
+    RADAR_DISABLE_VERSION_CHECK=1
+
 # podman, docker, qemu-img and qemu-system-x86_64: the host's, in a toolbox,
 # and bcvk run there (host-command). Its own layer, so a change to
 # it does not reinstall the tools.
@@ -186,8 +196,10 @@ COPY --from=vscode-extensions --chown=59999:59999 \
 #
 # devcontainer.metadata makes `"image": "ghcr.io/lucarickli/devcontainer"`
 # enough in a project's devcontainer.json. The language extensions listed
-# are already installed, so offline they are a no-op. checkForUpdates=local
-# keeps the Go extension from asking the module proxy about tool versions.
+# are already installed, so offline they are a no-op. checkForUpdates=off
+# keeps the Go extension from asking about, or offering, newer tools: they
+# come with the image (with local it still offers a newer gopls, which it
+# would go install into ~/go/bin, where it shadows the image's).
 # The org.opencontainers labels replace the ones inherited from fedora-toolbox
 # (a derived image cannot unset a label, only override it).
 # com.github.containers.toolbox=true is inherited and must stay.
@@ -198,7 +210,7 @@ LABEL org.opencontainers.image.title="devcontainer" \
       org.opencontainers.image.vendor="" \
       org.opencontainers.image.version="" \
       org.opencontainers.image.licenses="" \
-      devcontainer.metadata='[{"remoteUser":"dev","customizations":{"vscode":{"extensions":["golang.go","denoland.vscode-deno","rust-lang.rust-analyzer","bufbuild.vscode-buf"],"settings":{"go.toolsManagement.checkForUpdates":"local","go.toolsManagement.autoUpdate":false,"go.survey.prompt":false,"files.watcherExclude":{"**/target/**":true}}}}}]'
+      devcontainer.metadata='[{"remoteUser":"dev","customizations":{"vscode":{"extensions":["golang.go","denoland.vscode-deno","rust-lang.rust-analyzer","bufbuild.vscode-buf"],"settings":{"go.toolsManagement.checkForUpdates":"off","go.toolsManagement.autoUpdate":false,"go.survey.prompt":false,"files.watcherExclude":{"**/target/**":true}}}}}]'
 
 # --- ai: the same with Claude Code, ghcr.io/lucarickli/devcontainer:ai -------
 FROM plain AS ai
@@ -232,4 +244,4 @@ ENV DISABLE_UPDATES=1 \
 # image: it carries Anthropic's binary, so Dev Containers installs it from
 # the Marketplace when it opens the container.
 LABEL org.opencontainers.image.description="Go, Deno, Rust, Protocol Buffers and Kubernetes dev container with Claude Code (VS Code Dev Containers, toolbox)" \
-      devcontainer.metadata='[{"remoteUser":"dev","customizations":{"vscode":{"extensions":["golang.go","denoland.vscode-deno","rust-lang.rust-analyzer","bufbuild.vscode-buf","anthropic.claude-code"],"settings":{"go.toolsManagement.checkForUpdates":"local","go.toolsManagement.autoUpdate":false,"go.survey.prompt":false,"files.watcherExclude":{"**/target/**":true}}}}}]'
+      devcontainer.metadata='[{"remoteUser":"dev","customizations":{"vscode":{"extensions":["golang.go","denoland.vscode-deno","rust-lang.rust-analyzer","bufbuild.vscode-buf","anthropic.claude-code"],"settings":{"go.toolsManagement.checkForUpdates":"off","go.toolsManagement.autoUpdate":false,"go.survey.prompt":false,"files.watcherExclude":{"**/target/**":true}}}}}]'

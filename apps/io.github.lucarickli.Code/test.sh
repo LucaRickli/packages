@@ -19,7 +19,8 @@
 #   - The permissions and environment the sandbox has (/.flatpak-info), the
 #     variant's files, and that every library VS Code links is found.
 #   - A new profile's extensions and settings.
-#   - VS Code's window: it starts without a display and loads the workbench.
+#   - VS Code's window: it starts without a display and loads the workbench,
+#     with its own updates off.
 #   - The sandbox: what of the host is in here, and what is not.
 #   - The terminal: fish, the editor variables, tools/test.sh, mise, what
 #     persists, and host commands refused.
@@ -98,6 +99,7 @@ test "$(section 'Session Bus Policy')" = org.freedesktop.Notifications=talk
 test -z "$(section 'System Bus Policy')"
 environment=$(section Environment)
 envs=(PATH=/app/bin:/app/go/bin:/app/cargo/bin:/usr/bin RUSTUP_HOME=/app/rustup DENO_NO_UPDATE_CHECK=1
+    SOPS_DISABLE_VERSION_CHECK=1 TRIVY_SKIP_VERSION_CHECK=1 TRIVY_DISABLE_TELEMETRY=1 RADAR_DISABLE_VERSION_CHECK=1
     LD_LIBRARY_PATH=/app/lib XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
     SHELL=/app/bin/fish EDITOR=code-wait VISUAL=code-wait
     MISE_SYSTEM_CONFIG_DIR=/app/etc/mise MISE_SYSTEM_DATA_DIR=/app/share/mise MISE_AUTO_INSTALL=0
@@ -180,7 +182,9 @@ fi
 # display (Chromium's headless platform) and no GPU. Its renderer runs in
 # the sandbox that zypak has the portal make (Chromium refuses to start a
 # renderer without a sandbox). The workbench must load, as the DevTools
-# protocol on a local port shows. Then the window's processes are stopped.
+# protocol on a local port shows. Its own updates must be off (the
+# launcher's --disable-updates), as its main process logs once the window
+# is open. Then the window's processes are stopped.
 code --ozone-platform=headless --disable-gpu --remote-debugging-port=9223 --new-window ~/Developer
 loaded=
 for _ in $(seq 90); do
@@ -193,6 +197,18 @@ for _ in $(seq 90); do
 done
 if [ -z "$loaded" ]; then
     curl -sS http://127.0.0.1:9223/json/list >&2 || :
+    cat "$XDG_CONFIG_HOME"/Code/logs/*/main.log >&2 || :
+    exit 1
+fi
+disabled=
+for _ in $(seq 30); do
+    if grep -qsF 'update#ctor - updates are disabled by the environment' "$XDG_CONFIG_HOME"/Code/logs/*/main.log; then
+        disabled=1
+        break
+    fi
+    sleep 1
+done
+if [ -z "$disabled" ]; then
     cat "$XDG_CONFIG_HOME"/Code/logs/*/main.log >&2 || :
     exit 1
 fi

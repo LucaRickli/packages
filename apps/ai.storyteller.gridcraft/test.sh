@@ -12,13 +12,15 @@
 #     socket their libcups dials is the one flatpak mounts,
 #     /var/run/cups/cups.sock.
 #   - The desktop file starts the app and has its icon.
+#   - The update check is off. CRAFT_VERSIONS_FILE names /app's file, which
+#     keeps GridCraft on this version, and GridCraft still names it.
 #   - gridcraft-cli works without a display. A CSV made here, saved as a
 #     workbook, reads back as the same CSV. A formula over its cells gives
 #     the right value. The workbook saved as a PDF, which is what printing
 #     sends to lp, is a PDF.
 set -eu
 
-# --- The app, its libraries, printing, its desktop file ---
+# --- The app, its libraries, printing, its desktop file, its update check ---
 id=ai.storyteller.gridcraft
 bins="/app/bin/gridcraft /app/bin/gridcraft-cli"
 version=$(sed -n 's|.*<release version="\([^"]*\)".*|\1|p' "/app/share/metainfo/$id.metainfo.xml" | head -n 1)
@@ -53,6 +55,16 @@ desktop=/app/share/applications/$id.desktop
 test "$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' "$desktop")" = gridcraft
 test "$(sed -n 's/^Icon=//p' "$desktop")" = "$id"
 test -s "/app/share/icons/hicolor/scalable/apps/$id.svg"
+# The update check is off. A wrong path, file or app name would turn it
+# back on, and nothing would say so: craft-update reads them all as "follow
+# the releases".
+test "${CRAFT_VERSIONS_FILE-}" = /app/share/craft/versions.json
+python3 -c '
+import json, sys
+apps = json.load(open(sys.argv[1]))["apps"]
+want = {sys.argv[2]: {"Pinned": "v" + sys.argv[3]}}
+sys.exit(None if apps == want else "%s: %s, not %s" % (sys.argv[1], apps, want))' "$CRAFT_VERSIONS_FILE" gridcraft "$version"
+grep -aqF CRAFT_VERSIONS_FILE /app/bin/gridcraft
 
 # --- gridcraft-cli without a display ---
 cd "$(mktemp -d)"
@@ -63,4 +75,4 @@ test "$(gridcraft-cli cat book.xlsx --csv)" = "$(cat in.csv)"
 test "$(gridcraft-cli eval '=SUMPRODUCT(B2:B3,C2:C3)' --in book.xlsx)" = 13.5
 gridcraft-cli convert book.xlsx book.pdf >/dev/null
 test "$(head -c 5 book.pdf)" = %PDF-
-echo "gridcraft $version: libraries, printing tools, desktop file; CSV to workbook and back, a formula, PDF"
+echo "gridcraft $version: libraries, printing tools, desktop file, update check off; CSV to workbook and back, a formula, PDF"

@@ -47,7 +47,9 @@ fi
 #   - Dev Containers on the host's podman. /app/bin/podman runs it through
 #     host-spawn, once host access is granted.
 #   - The Go extension using the gopls and tools in /app, instead of
-#     fetching its own. The dev container has the same settings.
+#     fetching its own or offering newer ones: they come with the app, and
+#     one it fetched would shadow /app's for good, in ~/go/bin. The dev
+#     container has the same settings.
 #   - Dev Containers not mounting the Wayland socket. It would hand each
 #     container the compositor's own socket, around the restricted one that
 #     flatpak gives the app.
@@ -70,7 +72,7 @@ JSON
         cat <<'JSON'
     "dev.containers.dockerPath": "podman",
     "dev.containers.mountWaylandSocket": false,
-    "go.toolsManagement.checkForUpdates": "local",
+    "go.toolsManagement.checkForUpdates": "off",
     "go.toolsManagement.autoUpdate": false,
     "go.survey.prompt": false,
     "files.watcherExclude": { "**/target/**": true },
@@ -101,10 +103,14 @@ fi
 # The same as VS Code's own bin/code, but through zypak, which gives
 # Chromium its sandbox inside flatpak's. The Containerfile builds zypak as
 # Flathub's Electron BaseApp does. VS Code is Microsoft's release, in
-# /app/lib/vscode.
+# /app/lib/vscode. Its own updates are off (--disable-updates): the Flatpak
+# brings them, and its Download would only open the download page. That
+# goes for every profile, and the extensions then update only to versions
+# for this VS Code. Its banner for a build 60 days old stays: by then the
+# Flatpak has stopped bringing them.
 code=(env ELECTRON_RUN_AS_NODE=1 /app/bin/zypak-wrapper.sh /app/lib/vscode/code
     /app/lib/vscode/resources/app/out/cli.js
-    --extensions-dir="$XDG_DATA_HOME/vscode/extensions" --password-store="$store")
+    --extensions-dir="$XDG_DATA_HOME/vscode/extensions" --password-store="$store" --disable-updates)
 
 # --- Extensions ---
 # Each extension is installed into the profile once, and is yours from then

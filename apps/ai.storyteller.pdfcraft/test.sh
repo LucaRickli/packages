@@ -12,6 +12,8 @@
 #     socket their libcups dials is the one flatpak mounts,
 #     /var/run/cups/cups.sock.
 #   - The desktop file starts the app and has its icon.
+#   - The update check is off. CRAFT_VERSIONS_FILE names /app's file, which
+#     keeps PdfCraft on this version, and PdfCraft still names it.
 #   - pdfcraft-cli works without a display. A one-page PDF with a line of
 #     text, made here, is one 612x792 pt page with that text. It renders as
 #     a PNG of 612x792 at 72 dpi, and has two pages once a blank one is
@@ -19,7 +21,7 @@
 #     in /app/share/pdfcraft/models, has the text again.
 set -eu
 
-# --- The app, its libraries, printing, its desktop file ---
+# --- The app, its libraries, printing, its desktop file, its update check ---
 id=ai.storyteller.pdfcraft
 bins="/app/bin/pdfcraft /app/bin/pdfcraft-cli"
 version=$(sed -n 's|.*<release version="\([^"]*\)".*|\1|p' "/app/share/metainfo/$id.metainfo.xml" | head -n 1)
@@ -54,6 +56,16 @@ desktop=/app/share/applications/$id.desktop
 test "$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' "$desktop")" = pdfcraft
 test "$(sed -n 's/^Icon=//p' "$desktop")" = "$id"
 test -s "/app/share/icons/hicolor/scalable/apps/$id.svg"
+# The update check is off. A wrong path, file or app name would turn it
+# back on, and nothing would say so: craft-update reads them all as "follow
+# the releases".
+test "${CRAFT_VERSIONS_FILE-}" = /app/share/craft/versions.json
+python3 -c '
+import json, sys
+apps = json.load(open(sys.argv[1]))["apps"]
+want = {sys.argv[2]: {"Pinned": "v" + sys.argv[3]}}
+sys.exit(None if apps == want else "%s: %s, not %s" % (sys.argv[1], apps, want))' "$CRAFT_VERSIONS_FILE" pdfcraft "$version"
+grep -aqF CRAFT_VERSIONS_FILE /app/bin/pdfcraft
 
 # --- pdfcraft-cli without a display ---
 cd "$(mktemp -d)"
@@ -102,4 +114,4 @@ test "$(pages two.pdf)" = '2 612x792'
 pdfcraft-cli render in.pdf --page 1 --dpi 150 --out scan.png >/dev/null
 pdfcraft-cli batch scan.png --steps convert,ocr --out-dir ocr >/dev/null
 pdfcraft-cli text ocr/scan.pdf | grep -q 'Hello PdfCraft 42'
-echo "pdfcraft $version: libraries, printing tools, desktop file; PDF info, text, render, edit and OCR"
+echo "pdfcraft $version: libraries, printing tools, desktop file, update check off; PDF info, text, render, edit and OCR"

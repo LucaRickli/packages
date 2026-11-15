@@ -287,15 +287,24 @@ LABEL flatpak.finish-args.notifications=--talk-name=org.freedesktop.Notification
 #
 # The environment. PATH: the tools in /app, the toolchains' bin dirs; the
 # launcher adds the per-user ones (files/bin/code). RUSTUP_HOME: the Rust
-# toolchain in /app; DENO_NO_UPDATE_CHECK: Deno is the app's version.
-# LD_LIBRARY_PATH and XCURSOR_PATH as Flathub's com.visualstudio.code sets
-# them: /app/lib, which holds zypak's libraries here, in place of the
-# runtime's /app/lib64, where this app has none; the host's cursor themes
-# only, which its manifest gives for the cursor's scaling on Wayland.
+# toolchain in /app. DENO_NO_UPDATE_CHECK, SOPS_DISABLE_VERSION_CHECK,
+# TRIVY_SKIP_VERSION_CHECK and RADAR_DISABLE_VERSION_CHECK: the tools are
+# the app's version, so none looks for a newer one (deno and its VS Code
+# extension, sops --version, trivy after every scan, kubectl radar's web
+# UI); TRIVY_DISABLE_TELEMETRY too, without which trivy still asks, for its
+# telemetry. LD_LIBRARY_PATH and XCURSOR_PATH as Flathub's
+# com.visualstudio.code sets them: /app/lib, which holds zypak's libraries
+# here, in place of the runtime's /app/lib64, where this app has none; the
+# host's cursor themes only, which its manifest gives for the cursor's
+# scaling on Wayland.
 LABEL flatpak.finish-args.env="\
     --env=PATH=/app/bin:/app/go/bin:/app/cargo/bin:/usr/bin \
     --env=RUSTUP_HOME=/app/rustup \
     --env=DENO_NO_UPDATE_CHECK=1 \
+    --env=SOPS_DISABLE_VERSION_CHECK=1 \
+    --env=TRIVY_SKIP_VERSION_CHECK=1 \
+    --env=TRIVY_DISABLE_TELEMETRY=1 \
+    --env=RADAR_DISABLE_VERSION_CHECK=1 \
     --env=LD_LIBRARY_PATH=/app/lib \
     --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons"
 
