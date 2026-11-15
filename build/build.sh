@@ -56,7 +56,7 @@ set -euo pipefail
 # under its comment, and .github/actions/buildx reads it: keep both lines
 # as they are.
 # renovate: datasource=docker depName=moby/buildkit
-buildkit=moby/buildkit:v0.34.2@sha256:c5f8862f52499773af85bc07695b2379ef08e8002352b0df2c4864c91d78dabe
+buildkit=moby/buildkit:v0.35.0@sha256:aa632b921ef07411d2cb77292cd34213d4f7b384001d6fceef1e1f25bf9752bb
 
 # The script that the test's container runs, as root at first:
 # - It makes a socket at /run/docker.sock, for the VS Code Flatpak's Docker
