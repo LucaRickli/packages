@@ -111,7 +111,7 @@ deno v2.9.8 https://github.com/denoland/deno/releases/download/{v}/deno-x86_64-u
 # renovate: datasource=github-tags depName=rust-lang/rustup
 rustup 1.29.3 https://static.rust-lang.org/rustup/archive/{v}/x86_64-unknown-linux-gnu/rustup-init .sha256 rustup-init https://raw.githubusercontent.com/rust-lang/rustup/{v}/LICENSE-APACHE#sha256:8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90,https://raw.githubusercontent.com/rust-lang/rustup/{v}/LICENSE-MIT#sha256:c9a75f18b9ab2927829a208fc6aa2cf4e63b8420887ba29cdb265d6619ae82d5
 # renovate: datasource=github-releases depName=rust-lang/rust
-rust 1.99.1 rustup - clippy,rustfmt,rust-src,rust-analyzer share/doc/rust/COPYRIGHT.html,share/doc/rust/licenses/ https://static.rust-lang.org/dist/rustc-{v}-src.tar.xz
+rust 1.100.0 rustup - clippy,rustfmt,rust-src,rust-analyzer share/doc/rust/COPYRIGHT.html,share/doc/rust/licenses/ https://static.rust-lang.org/dist/rustc-{v}-src.tar.xz
 
 # --- Shell and CLI tools -------------------------------------------------------
 # fish, as on the host (the Flatpak's terminal runs it with your dotfiles). One
@@ -131,7 +131,7 @@ fd v10.5.2 https://github.com/sharkdp/fd/releases/download/{v}/fd-{v}-x86_64-unk
 # renovate: datasource=github-releases depName=casey/just
 just 1.59.0 https://github.com/casey/just/releases/download/{v}/just-{v}-x86_64-unknown-linux-musl.tar.gz https://github.com/casey/just/releases/download/{v}/SHA256SUMS just LICENSE https://github.com/casey/just/archive/refs/tags/{v}.tar.gz
 # renovate: datasource=github-releases depName=cli/cli
-gh v2.103.3 https://github.com/cli/cli/releases/download/{v}/gh_{n}_linux_amd64.tar.gz https://github.com/cli/cli/releases/download/{v}/gh_{n}_checksums.txt gh_{n}_linux_amd64/bin/gh gh_{n}_linux_amd64/LICENSE https://github.com/cli/cli/archive/refs/tags/{v}.tar.gz
+gh v2.104.0 https://github.com/cli/cli/releases/download/{v}/gh_{n}_linux_amd64.tar.gz https://github.com/cli/cli/releases/download/{v}/gh_{n}_checksums.txt gh_{n}_linux_amd64/bin/gh gh_{n}_linux_amd64/LICENSE https://github.com/cli/cli/archive/refs/tags/{v}.tar.gz
 # yq's checksums file holds twenty hashes per asset, not a sha256 list.
 # renovate: datasource=github-release-attachments depName=mikefarah/yq
 yq v4.54.3 https://github.com/mikefarah/yq/releases/download/{v}/yq_linux_amd64 sha256:129534601871538efe0ba4c5e62a34fb1d5f469bcb975c4fddeb467d82974973 yq_linux_amd64:yq https://raw.githubusercontent.com/mikefarah/yq/{v}/LICENSE#sha256:697db34dabb21562fe84487a2ccd031fbd45382b89c2cbdec8ef31682c486040 https://github.com/mikefarah/yq/archive/refs/tags/{v}.tar.gz
