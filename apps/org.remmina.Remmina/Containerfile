@@ -57,7 +57,7 @@ RUN for i in 1 2 3; do dnf -q makecache && break; [ "$i" != 3 ] || exit 1; sleep
 # those (without it they fail, and CMake no longer looks in lib64); Remmina
 # adds its -fPIC after it. CMake's build type is Release (-O3).
 # renovate: datasource=gitlab-tags depName=Remmina/Remmina
-ARG REMMINA_VERSION=v1.4.43 REMMINA_COMMIT=7be0cf2348d149c6bf5bd882fe91d3bec7d6aebb
+ARG REMMINA_VERSION=v1.4.44 REMMINA_COMMIT=03bb026b5fa1646115d1775367ccbfa27ae598cf
 RUN set -eux; \
     for i in 1 2 3; do \
         git -c advice.detachedHead=false clone --quiet --depth 1 --branch "$REMMINA_VERSION" \
