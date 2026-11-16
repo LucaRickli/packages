@@ -45,9 +45,9 @@ kubectl v1.37.2 https://dl.k8s.io/release/{v}/bin/linux/amd64/kubectl .sha256 ku
 # renovate: datasource=github-releases depName=int128/kubelogin
 kubelogin v1.36.4 https://github.com/int128/kubelogin/releases/download/{v}/kubelogin_linux_amd64.zip .sha256 kubelogin:kubectl-oidc_login LICENSE
 # renovate: datasource=github-releases depName=skyhook-io/radar
-kubectl-radar v1.20.2 https://github.com/skyhook-io/radar/releases/download/{v}/radar_{v}_linux_amd64.tar.gz https://github.com/skyhook-io/radar/releases/download/{v}/checksums.txt kubectl-radar LICENSE https://github.com/skyhook-io/radar/archive/refs/tags/{v}.tar.gz
+kubectl-radar v1.20.3 https://github.com/skyhook-io/radar/releases/download/{v}/radar_{v}_linux_amd64.tar.gz https://github.com/skyhook-io/radar/releases/download/{v}/checksums.txt kubectl-radar LICENSE https://github.com/skyhook-io/radar/archive/refs/tags/{v}.tar.gz
 # renovate: datasource=github-releases depName=helm/helm
-helm v4.3.1 https://get.helm.sh/helm-{v}-linux-amd64.tar.gz .sha256sum linux-amd64/helm linux-amd64/LICENSE
+helm v4.3.2 https://get.helm.sh/helm-{v}-linux-amd64.tar.gz .sha256sum linux-amd64/helm linux-amd64/LICENSE
 # renovate: datasource=github-releases depName=helmfile/helmfile
 helmfile v1.8.4 https://github.com/helmfile/helmfile/releases/download/{v}/helmfile_{n}_linux_amd64.tar.gz https://github.com/helmfile/helmfile/releases/download/{v}/helmfile_{n}_checksums.txt helmfile LICENSE https://github.com/helmfile/helmfile/archive/refs/tags/{v}.tar.gz
 # renovate: datasource=github-releases depName=fluxcd/flux2
@@ -123,7 +123,7 @@ fish 4.9.3 https://github.com/fish-shell/fish-shell/releases/download/{v}/fish-{
 # makes the Go and Deno here its own installs. The key is jdx's
 # (https://mise.jdx.dev/installing-mise.html).
 # renovate: datasource=github-releases depName=jdx/mise
-mise v2026.11.7 https://github.com/jdx/mise/releases/download/{v}/mise-{v}-linux-x64-musl.tar.gz https://github.com/jdx/mise/releases/download/{v}/SHASUMS256.txt,minisign:RWTC3g8W3z4RZK3V3qv7fa1QY4JEWyBtqIHW+85QlJpZc5yG+uNYNBSZ mise/bin/mise,mise/share/fish/vendor_conf.d/mise-activate.fish:share/fish/vendor_conf.d/mise-activate.fish mise/LICENSE https://github.com/jdx/mise/archive/refs/tags/{v}.tar.gz
+mise v2026.11.8 https://github.com/jdx/mise/releases/download/{v}/mise-{v}-linux-x64-musl.tar.gz https://github.com/jdx/mise/releases/download/{v}/SHASUMS256.txt,minisign:RWTC3g8W3z4RZK3V3qv7fa1QY4JEWyBtqIHW+85QlJpZc5yG+uNYNBSZ mise/bin/mise,mise/share/fish/vendor_conf.d/mise-activate.fish:share/fish/vendor_conf.d/mise-activate.fish mise/LICENSE https://github.com/jdx/mise/archive/refs/tags/{v}.tar.gz
 # renovate: datasource=github-releases depName=BurntSushi/ripgrep
 ripgrep 15.2.0 https://github.com/BurntSushi/ripgrep/releases/download/{v}/ripgrep-{v}-x86_64-unknown-linux-musl.tar.gz .sha256 ripgrep-{v}-x86_64-unknown-linux-musl/rg ripgrep-{v}-x86_64-unknown-linux-musl/COPYING,ripgrep-{v}-x86_64-unknown-linux-musl/LICENSE-MIT,ripgrep-{v}-x86_64-unknown-linux-musl/UNLICENSE
 # renovate: datasource=github-release-attachments depName=sharkdp/fd
