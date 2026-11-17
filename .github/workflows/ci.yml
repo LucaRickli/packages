@@ -1,8 +1,9 @@
 # The pull request gate. Every PR runs this one workflow, and its last job,
 # `ci-ok`, is the one status check that matters: the main branch ruleset
-# (.github/rulesets/main.json) requires it, so nothing merges (Renovate's
-# automerge included) until it is green, and it sends every change through
-# a pull request, so nothing reaches main without this having run.
+# (.github/rulesets/main.json) requires it, and sends every change through
+# a pull request. So nothing reaches main but by a pull request, and none
+# merges (Renovate's automerge included) until it is green, unless an
+# admin merges it without waiting.
 # devcontainer.yml and flatpaks.yml only matter for some paths, and a
 # required check from a path-filtered workflow never reports on the PRs it
 # skips, and blocks them forever.
