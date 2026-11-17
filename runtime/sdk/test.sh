@@ -38,10 +38,15 @@ test "$GBM_BACKENDS_PATH" = /usr/lib64/GL/lib/gbm:/usr/lib64/gbm
 test -f /usr/etc/ld.so.conf && test ! -s /usr/etc/ld.so.conf
 grep -qxF 'include /run/flatpak/ld.so.conf.d/runtime-*.conf' /etc/ld.so.conf
 test -d /usr/lib64/GL && test "$(readlink /etc/glvnd)" = ../lib64/GL/glvnd && test "$(readlink /etc/vulkan)" = ../lib64/GL/vulkan
+# OpenSSL's major version, the command's: its libraries are named for it
+# (libssl.so.3 with OpenSSL 3, Fedora 44; libssl.so.4 with OpenSSL 4,
+# Fedora 45), and the program built against its headers below reports it.
+openssl_major=$(openssl version | sed -n 's/^OpenSSL \([0-9][0-9]*\)\..*/\1/p')
+test -n "$openssl_major"
 cache=$(ldconfig -p)
 for lib in libnss3.so libnssutil3.so libsmime3.so libnspr4.so libplc4.so libplds4.so libxkbfile.so.1 \
     libgtk-3.so.0 libgbm.so.1 libasound.so.2 libdbus-1.so.3 libsecret-1.so.0 libsystemd.so.0 \
-    libstdc++.so.6 libssl.so.3; do
+    libstdc++.so.6 "libssl.so.$openssl_major"; do
     # Not grep -q, which would stop reading and leave printf a broken pipe.
     printf '%s\n' "$cache" | grep "^[[:space:]]$lib " >/dev/null || { echo "not in the ld.so cache: $lib" >&2; exit 1; }
 done
@@ -83,7 +88,7 @@ int main(void) { puts(OpenSSL_version(OPENSSL_VERSION)); return 0; }
 C
 # shellcheck disable=SC2046  # pkg-config's words, split
 cc -g -o ssl ssl.c $(pkg-config --cflags --libs openssl)
-./ssl | grep -q '^OpenSSL 3\.'
+./ssl | grep -q "^OpenSSL $openssl_major\."
 cat >hello.cc <<'CXX'
 #include <iostream>
 int main() { std::cout << "c++ ok" << std::endl; }
