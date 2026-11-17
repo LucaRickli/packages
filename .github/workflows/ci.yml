@@ -1,9 +1,11 @@
 # The pull request gate. Every PR runs this one workflow, and its last job,
 # `ci-ok`, is the one status check that matters: the main branch ruleset
 # (.github/rulesets/main.json) requires it, so nothing merges (Renovate's
-# automerge included) until it is green. devcontainer.yml and flatpaks.yml
-# only matter for some paths, and a required check from a path-filtered
-# workflow never reports on the PRs it skips, and blocks them forever.
+# automerge included) until it is green, and it sends every change through
+# a pull request, so nothing reaches main without this having run.
+# devcontainer.yml and flatpaks.yml only matter for some paths, and a
+# required check from a path-filtered workflow never reports on the PRs it
+# skips, and blocks them forever.
 # `ci-ok` exists on every PR and reports only after everything it depends on
 # has finished: skipped (not affected by this PR) counts as passed, failed
 # or cancelled does not.
