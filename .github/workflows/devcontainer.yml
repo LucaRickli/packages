@@ -13,7 +13,8 @@
 # (FRESH), so the Fedora packages in them stay current without a commit.
 # Run by hand with `security` set, the scan requires those Fedora security
 # updates. Pull requests get it through ci.yml, the PR gate, and only
-# build, test and scan, as does a run by hand on a branch other than main.
+# build, test and scan, as does a run by hand on a branch other than main;
+# fresh, too, where the pull request changes how it is baked (`fresh`).
 name: devcontainer
 
 on:
@@ -42,6 +43,15 @@ on:
         required: false
         type: string
   workflow_call:
+    inputs:
+      # ci.yml's, for a pull request that changes how the images are baked:
+      # built fresh, as on Mondays, so that what breaks only the weekly
+      # build fails the pull request instead of main.
+      fresh:
+        description: "Build without the cache, as the weekly run does"
+        required: false
+        type: boolean
+        default: false
 
 # Only pull requests supersede each other. Any other run waits for the one
 # before it, which, cancelled between its push and `promote`, would leave
@@ -94,19 +104,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      # ai is plain with a few layers on top, built with it in one bake:
-      # the same stages, so the same layers, on the same base (were Fedora's
-      # newer for ai, it would be all new layers, untested), fresh or not.
-      # The Test step checks it. Into output/images/devcontainer and
-      # devcontainer-ai, OCI image layouts, which the push copies, and into
-      # rootless podman's storage as LOCAL and LOCAL_AI, which the test and
-      # the scan run (build/ci.sh devcontainer). The contexts: devcontainer/,
-      # and tools/ and keys/ as `tools` and `keys`, which the Containerfile
-      # copies the shared files from.
+      # ai is plain with a few layers on top: plain is baked first, and ai
+      # FROM its image, so the same layers under ai's own, fresh or not,
+      # whatever the cache holds. The Test step checks it. Into
+      # output/images/devcontainer and devcontainer-ai, OCI image layouts,
+      # which the push copies, and into rootless podman's storage as LOCAL
+      # and LOCAL_AI, which the test and the scan run (build/ci.sh
+      # devcontainer). The contexts: devcontainer/, and tools/ and keys/ as
+      # `tools` and `keys`, which the Containerfile copies the shared files
+      # from. Fresh weekly, by hand, and on a pull request that changes how
+      # it is baked (ci.yml's `fresh`).
       - name: Build
         env:
           EVENT: ${{ github.event_name }}
-          FRESH: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+          FRESH: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || inputs.fresh == true }}
           GH_TOKEN: ${{ github.token }}   # a re-run writes no cache where main moved on
         run: build/ci.sh devcontainer
 

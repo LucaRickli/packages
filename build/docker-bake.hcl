@@ -59,10 +59,11 @@ variable "FEDORA" {
 }
 
 # true for CI's weekly runs and those by hand, in the runtime's job and the
-# dev container's: what installs Fedora's updates (the runtime, the dev
-# container's plain stage and the builder) is built again without the
-# cache, so that it has Fedora's newest packages; whatever is built on them
-# follows.
+# dev container's, and for the dev container's on a pull request that
+# changes how it is baked (ci.yml): what installs Fedora's updates (the
+# runtime, the dev container's plain stage and the builder) is built again
+# without the cache, so that it has Fedora's newest packages; whatever is
+# built on them follows.
 variable "FRESH" {
   type    = bool
   default = false
@@ -95,6 +96,16 @@ variable "DEVCONTAINER" {
 
 variable "DEVCONTAINER_AI" {
   default = "localhost/devcontainer:ai"
+}
+
+# The image the dev container's ai is built FROM: the named context plain,
+# which replaces the Containerfile's stage of that name, so that ai's
+# layers under its own are the plain image's, every one, whatever a cache
+# holds. Built here, target:devcontainer-plain, or another, as
+# oci-layout://DIR: CI bakes plain first and alone, and ai on its layout
+# (build/ci.sh devcontainer), as it does the runtime.
+variable "DEVCONTAINER_PLAIN" {
+  default = "target:devcontainer-plain"
 }
 
 # The apps, apps/<id>/: on the runtime or the SDK (on, the one its
@@ -170,24 +181,34 @@ target "_common" {
   attest = ["type=provenance,disabled=true"]
 }
 
-# ai is plain with a few layers on top, built with it in one run: the same
-# stages, and so the same layers, on the same base.
+# What the dev container's two images share.
+target "_devcontainer" {
+  inherits   = ["_common"]
+  context    = "devcontainer"
+  dockerfile = "Containerfile"
+  output     = ["type=docker"]
+}
+
 target "devcontainer-plain" {
-  inherits        = ["_common"]
-  context         = "devcontainer"
-  dockerfile      = "Containerfile"
+  inherits        = ["_devcontainer"]
   target          = "plain"
   contexts        = { tools = "tools", keys = "keys" }
   no-cache-filter = FRESH ? ["plain"] : []
   cache-from      = cache_from("devcontainer-plain")
   cache-to        = cache_to("devcontainer-plain")
   tags            = [DEVCONTAINER]
-  output          = ["type=docker"]
 }
 
+# ai is plain with a few layers on top: FROM the plain image itself
+# (DEVCONTAINER_PLAIN), never a plain stage of its own. Its steps' cache
+# goes by that image's layers. It inherits nothing of devcontainer-plain:
+# with plain's no-cache-filter and both caches, a fresh run rebuilt plain,
+# while ai's steps still found their cache, built on the plain before, and
+# ai came out on it.
 target "devcontainer-ai" {
-  inherits   = ["devcontainer-plain"]
+  inherits   = ["_devcontainer"]
   target     = "ai"
+  contexts   = { tools = "tools", keys = "keys", plain = DEVCONTAINER_PLAIN }
   cache-from = cache_from("devcontainer-ai")
   cache-to   = cache_to("devcontainer-ai")
   tags       = [DEVCONTAINER_AI]

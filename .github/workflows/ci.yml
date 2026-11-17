@@ -1,17 +1,20 @@
 # The pull request gate. Every PR runs this one workflow, and its last job,
 # `ci-ok`, is the one status check that matters: the main branch ruleset
 # (.github/rulesets/main.json) requires it, so nothing merges (Renovate's
-# automerge included) until it is green. devcontainer.yml and flatpaks.yml
-# only matter for some paths, and a required check from a path-filtered
-# workflow never reports on the PRs it skips, and blocks them forever.
+# automerge included) until it is green, and it sends every change through
+# a pull request, so nothing reaches main without this having run.
+# devcontainer.yml and flatpaks.yml only matter for some paths, and a
+# required check from a path-filtered workflow never reports on the PRs it
+# skips, and blocks them forever.
 # `ci-ok` exists on every PR and reports only after everything it depends on
 # has finished: skipped (not affected by this PR) counts as passed, failed
 # or cancelled does not.
 #
 # What a PR gets: lint always; the dev container, and the runtime and the
 # SDK with their apps (the VS Code Flatpak on the SDK), built and tested,
-# when the PR can affect them; and the pins against upstream's signatures
-# when one changes. Nothing is pushed or signed.
+# when the PR can affect them, the dev container also without the cache, as
+# on Mondays, when the PR changes how it is baked; and the pins against
+# upstream's signatures when one changes. Nothing is pushed or signed.
 #
 # On a push to main only lint runs, and only when CI plumbing (.github/,
 # build/), the Justfile or verify-pins.sh changed (devcontainer.yml and
@@ -65,6 +68,7 @@ jobs:
       flatpaks: ${{ steps.classify.outputs.flatpaks }}
       renovate: ${{ steps.classify.outputs.renovate }}
       pins: ${{ steps.classify.outputs.pins }}
+      fresh: ${{ steps.classify.outputs.fresh }}
     steps:
       - name: Classify the changed files
         id: classify
@@ -78,11 +82,11 @@ jobs:
           case $EVENT in
             push)
               # The other workflows run on push by themselves; here only lint.
-              printf '%s\n' devcontainer=false flatpaks=false renovate=true pins=false | tee -a "$GITHUB_OUTPUT"
+              printf '%s\n' devcontainer=false flatpaks=false renovate=true pins=false fresh=false | tee -a "$GITHUB_OUTPUT"
               exit 0 ;;
             schedule | workflow_dispatch)
               # The weekly check of every pin, before the weekly builds.
-              printf '%s\n' devcontainer=false flatpaks=false renovate=false pins=true | tee -a "$GITHUB_OUTPUT"
+              printf '%s\n' devcontainer=false flatpaks=false renovate=false pins=true fresh=false | tee -a "$GITHUB_OUTPUT"
               exit 0 ;;
           esac
           # Both names of a rename. Three tries, 30 s apart: the API fails
@@ -96,7 +100,7 @@ jobs:
           done
           echo "changed files:"; sed 's/^/  /' files.txt
 
-          devcontainer=false flatpaks=false renovate=false pins=false
+          devcontainer=false flatpaks=false renovate=false pins=false fresh=false
           while IFS= read -r f; do
             case "$f" in
               .github/workflows/ci.yml)
@@ -137,18 +141,29 @@ jobs:
             case "$f" in
               tools/tools.txt|tools/extensions.txt|tools/verify-pins.sh) pins=true ;;
             esac
+            # How the dev container is baked: its Containerfile, the bake
+            # file and the scripts that bake it, BuildKit's pin (build.sh)
+            # and buildx's, and its workflow. Such a PR bakes it without the
+            # cache as well, as the weekly run does, so that what breaks only
+            # that build fails the PR, not main's weekly run. Not this
+            # workflow, which Renovate's own updates change every day or two.
+            case "$f" in
+              devcontainer/Containerfile|build/docker-bake.hcl|build/build.sh|build/ci.sh|.github/actions/buildx/*|.github/workflows/devcontainer.yml)
+                fresh=true ;;
+            esac
           done < files.txt
           # The files API stops at 3000 files. Anything that big runs
           # everything rather than trusting a truncated list.
           if [ "${CHANGED:-0}" -ge 3000 ]; then
             echo "::notice::${CHANGED} changed files, more than the API lists: running everything"
-            devcontainer=true flatpaks=true renovate=true pins=true
+            devcontainer=true flatpaks=true renovate=true pins=true fresh=true
           fi
           {
             echo "devcontainer=$devcontainer"
             echo "flatpaks=$flatpaks"
             echo "renovate=$renovate"
             echo "pins=$pins"
+            echo "fresh=$fresh"
           } | tee -a "$GITHUB_OUTPUT"
 
   # Cheap, and on every PR: the workflow files themselves (actionlint runs
@@ -317,6 +332,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.devcontainer == 'true'
     uses: ./.github/workflows/devcontainer.yml
+    with:
+      fresh: ${{ needs.changes.outputs.fresh == 'true' }}
     # What devcontainer.yml's jobs ask for. On a pull request nothing is
     # pushed or uploaded; fork PRs get a read-only token whatever is granted
     # here.

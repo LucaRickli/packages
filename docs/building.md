@@ -85,7 +85,10 @@ signed, and indexes nothing.
   of it pushed on `main`.
 - **The PR gate**: [`ci.yml`](../.github/workflows/ci.yml) runs lint
   (actionlint, zizmor, `just check`, the Renovate config), the pin checks,
-  and the dev container and Flatpak workflows where a PR affects them. Its
+  and the dev container and Flatpak workflows where a PR affects them; the
+  dev container also without the cache, as on Mondays, where the PR
+  changes how it is baked (its Containerfile, the bake file, `build.sh`,
+  `ci.sh`, buildx or BuildKit, its workflow). Its
   last job, `ci-ok`, is the one required check. Every Monday it also checks
   every pin against upstream's signatures (`tools/verify-pins.sh`).
 - **The cache**: every image is baked on `ghcr.io/<owner>/packages-cache`,
@@ -206,7 +209,10 @@ Its settings:
 
 - auto-merge allowed;
 - [`.github/rulesets/main.json`](../.github/rulesets/main.json) imported
-  (Rules, Rulesets, Import a ruleset), which makes `ci-ok` required;
+  (Rules, Rulesets, Import a ruleset), which makes `ci-ok` required and
+  sends every change through a pull request, the admins' too: they may
+  merge one without waiting for its checks, but never push to `main`
+  (a push there lands before any check has run on it);
 - private vulnerability reporting on, where
   [`SECURITY.md`](../.github/SECURITY.md) sends reporters;
 - the `release` environment with the `SIGNING_SECRET` secret, deployment
