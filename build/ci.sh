@@ -969,19 +969,25 @@ build() {
 
 # --- devcontainer ---
 
-# devcontainer: bakes the dev container's two images (docker-bake.hcl's
-# devcontainer group) as OCI image layouts: plain's
-# output/images/devcontainer and ai's devcontainer-ai, which push copies
-# byte for byte. Then it loads them into rootless podman's storage as LOCAL
-# and LOCAL_AI, which the test and the scan run. Both are in one bake, as
-# ai is plain with a few layers on top: on the same base, and fresh or not,
-# of the same plain.
+# devcontainer: bakes the dev container's two images as OCI image layouts:
+# plain's output/images/devcontainer and ai's devcontainer-ai, which push
+# copies byte for byte. Then it loads them into rootless podman's storage
+# as LOCAL and LOCAL_AI, which the test and the scan run. plain first and
+# alone, then ai FROM its layout (docker-bake.hcl's DEVCONTAINER_PLAIN), as
+# bake_base does the runtime: ai is plain with a few layers on top, so under
+# them it has the plain image's layers, every one, fresh or not, whatever
+# the cache holds. Its steps' cache goes by those layers. Baked in one bake,
+# of a plain stage of its own, ai's steps found their cache from before on
+# a fresh run, built on the plain before, and ai came out on that plain.
 devcontainer() {
     : "${EVENT:?}" "${GITHUB_REPOSITORY_OWNER:?}" "${LOCAL:?}" "${LOCAL_AI:?}"
-    bake devcontainer-plain,devcontainer-ai \
+    bake devcontainer-plain \
         --set devcontainer-plain.output=type=oci,dest=output/images/devcontainer,tar=false \
+        devcontainer-plain
+    export DEVCONTAINER_PLAIN="oci-layout://$PWD/output/images/devcontainer"
+    bake devcontainer-ai \
         --set devcontainer-ai.output=type=oci,dest=output/images/devcontainer-ai,tar=false \
-        devcontainer
+        devcontainer-ai
     skopeo copy --quiet oci:output/images/devcontainer "containers-storage:$LOCAL"
     skopeo copy --quiet oci:output/images/devcontainer-ai "containers-storage:$LOCAL_AI"
 }

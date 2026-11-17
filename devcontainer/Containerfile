@@ -213,6 +213,8 @@ LABEL org.opencontainers.image.title="devcontainer" \
       devcontainer.metadata='[{"remoteUser":"dev","customizations":{"vscode":{"extensions":["golang.go","denoland.vscode-deno","rust-lang.rust-analyzer","bufbuild.vscode-buf"],"settings":{"go.toolsManagement.checkForUpdates":"off","go.toolsManagement.autoUpdate":false,"go.survey.prompt":false,"files.watcherExclude":{"**/target/**":true}}}}}]'
 
 # --- ai: the same with Claude Code, ghcr.io/lucarickli/devcontainer:ai -------
+# FROM the plain image itself as bake builds it: the named context plain
+# replaces the stage above (build/docker-bake.hcl's DEVCONTAINER_PLAIN).
 FROM plain AS ai
 
 # ~/.claude exists, empty, so that a new volume mounted there

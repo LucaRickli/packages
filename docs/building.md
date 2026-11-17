@@ -85,7 +85,10 @@ signed, and indexes nothing.
   of it pushed on `main`.
 - **The PR gate**: [`ci.yml`](../.github/workflows/ci.yml) runs lint
   (actionlint, zizmor, `just check`, the Renovate config), the pin checks,
-  and the dev container and Flatpak workflows where a PR affects them. Its
+  and the dev container and Flatpak workflows where a PR affects them; the
+  dev container also without the cache, as on Mondays, where the PR
+  changes how it is baked (its Containerfile, the bake file, `build.sh`,
+  `ci.sh`, buildx or BuildKit, its workflow). Its
   last job, `ci-ok`, is the one required check. Every Monday it also checks
   every pin against upstream's signatures (`tools/verify-pins.sh`).
 - **The cache**: every image is baked on `ghcr.io/<owner>/packages-cache`,
