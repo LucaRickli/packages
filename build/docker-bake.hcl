@@ -99,11 +99,16 @@ variable "DEVCONTAINER_AI" {
 }
 
 # The image the dev container's ai is built FROM: the named context plain,
-# which replaces the Containerfile's stage of that name, so that ai's
-# layers under its own are the plain image's, every one, whatever a cache
-# holds. Built here, target:devcontainer-plain, or another, as
-# oci-layout://DIR: CI bakes plain first and alone, and ai on its layout
-# (build/ci.sh devcontainer), as it does the runtime.
+# which replaces the Containerfile's stage of that name. build.sh and CI
+# (build/ci.sh devcontainer) bake plain first and alone, and ai on its
+# layout, as oci-layout://DIR, as CI does the runtime: ai's steps' cache
+# then goes by that image's layers, and ai's layers under its own are the
+# plain image's, every one, whatever a cache holds. The default,
+# target:devcontainer-plain, is for a bake of both at once. It gives ai
+# plain's build, not its image, and ai's cache would go by plain's steps,
+# as with a plain stage of its own: it hands back the ai from before on a
+# plain built again since, fresh or by another bake. So ai is built without
+# its cache there (devcontainer-ai's no-cache-filter).
 variable "DEVCONTAINER_PLAIN" {
   default = "target:devcontainer-plain"
 }
@@ -200,18 +205,19 @@ target "devcontainer-plain" {
 }
 
 # ai is plain with a few layers on top: FROM the plain image itself
-# (DEVCONTAINER_PLAIN), never a plain stage of its own. Its steps' cache
-# goes by that image's layers. It inherits nothing of devcontainer-plain:
-# with plain's no-cache-filter and both caches, a fresh run rebuilt plain,
-# while ai's steps still found their cache, built on the plain before, and
-# ai came out on it.
+# (DEVCONTAINER_PLAIN), never a plain stage of its own. It inherits nothing
+# of devcontainer-plain: with plain's no-cache-filter and both caches, a
+# fresh run rebuilt plain, while ai's steps still found their cache, built
+# on the plain before, and ai came out on it. On plain's build (target:),
+# ai's steps never come from the cache: a few seconds' work.
 target "devcontainer-ai" {
-  inherits   = ["_devcontainer"]
-  target     = "ai"
-  contexts   = { tools = "tools", keys = "keys", plain = DEVCONTAINER_PLAIN }
-  cache-from = cache_from("devcontainer-ai")
-  cache-to   = cache_to("devcontainer-ai")
-  tags       = [DEVCONTAINER_AI]
+  inherits        = ["_devcontainer"]
+  target          = "ai"
+  contexts        = { tools = "tools", keys = "keys", plain = DEVCONTAINER_PLAIN }
+  no-cache-filter = trimprefix(DEVCONTAINER_PLAIN, "target:") != DEVCONTAINER_PLAIN ? ["ai"] : []
+  cache-from      = cache_from("devcontainer-ai")
+  cache-to        = cache_to("devcontainer-ai")
+  tags            = [DEVCONTAINER_AI]
 }
 
 target "builder" {

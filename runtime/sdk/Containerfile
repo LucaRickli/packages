@@ -3,7 +3,8 @@
 # (apps/io.github.lucarickli.Code), whose terminal is one: the C and C++
 # toolchain with CMake, Ninja, Meson and the autotools, gdb and strace, git
 # with LFS, the OpenSSH client, Perl, pip, the commands a terminal and its
-# scripts expect, and the libraries VS Code links that the runtime lacks.
+# scripts expect, and the libraries VS Code links or loads that the runtime
+# lacks.
 # What Flathub's Freedesktop Sdk gave that app's terminal before, but for
 # valgrind, ccache and every library's headers and tools (below, with their
 # cost). build/flatpak.sh makes it as it makes the runtime: /usr becomes
@@ -38,7 +39,13 @@ FROM runtime AS flatpak
 # - a terminal's own: clear, reset, tput, infocmp, tic, hostname, zip, script;
 # - Perl with shasum; python, pip and the headers pip builds C against;
 # - sqlite3, cpio, bsdtar, wget, nano: what scripts and READMEs call;
-# - NSS and libxkbfile, which VS Code links and the runtime lacks (ldd).
+# - NSS and libxkbfile, which VS Code links and the runtime lacks (ldd);
+# - OpenSSL 3's libraries, which VS Code loads itself (dlopen: no ldd sees
+#   them), and without which every extension from the Marketplace fails to
+#   install: vsce-sign, the .NET program that checks their signatures, and
+#   the Copilot SDK take no OpenSSL newer than 3. By their sonames, which
+#   every release has a package for: Fedora 44's own OpenSSL, already the
+#   runtime's; on Fedora 45, whose own is OpenSSL 4, openssl3-libs.
 # Not here, though Flathub's Sdk had them, with their cost on top of these
 # (dnf's, download / installed, Fedora 44, November 2026): valgrind, 4 / 29
 # MiB; ccache, 1 / 2 MiB; every library's headers and tools.
@@ -62,6 +69,7 @@ RUN for i in 1 2 3; do dnf -q makecache && break; [ "$i" != 3 ] || exit 1; sleep
         perl-interpreter perl-Digest-SHA python-unversioned-command python3-pip python3-devel \
         sqlite cpio bsdtar wget2-wget nano \
         nss libxkbfile \
+        'libssl.so.3()(64bit)' 'libcrypto.so.3()(64bit)' \
     && dnf -q -C advisory list --security --all --repo=updates --json \
         > /usr/share/fedora-bootc/advisories-at-build.json \
     && dnf clean all \

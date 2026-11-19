@@ -209,10 +209,11 @@ Its settings:
 
 - auto-merge allowed;
 - [`.github/rulesets/main.json`](../.github/rulesets/main.json) imported
-  (Rules, Rulesets, Import a ruleset), which makes `ci-ok` required and
-  sends every change through a pull request, the admins' too: they may
-  merge one without waiting for its checks, but never push to `main`
-  (a push there lands before any check has run on it);
+  (Rules, Rulesets, Import a ruleset) once `main` is pushed, which makes
+  `ci-ok` required and sends every change through a pull request, the
+  admins' too: they may merge one without waiting for its checks, but
+  never push to `main` (a push there lands before any check has run on
+  it), not even the first, which creates it;
 - private vulnerability reporting on, where
   [`SECURITY.md`](../.github/SECURITY.md) sends reporters;
 - the `release` environment with the `SIGNING_SECRET` secret, deployment
