@@ -701,8 +701,9 @@ promote() {
 # - and once private.sh found the cache's package private, as it holds
 #   every image's layers.
 # Sets wrote to the caches it wrote. FRESH, as the job sets it (the
-# runtime's and the dev container's, weekly and by hand), goes to this bake
-# alone. build.sh tries each bake three times.
+# runtime's and the dev container's, weekly and by hand, and the dev
+# container's on a pull request that changes how it is baked: ci.yml's
+# fresh), goes to this bake alone. build.sh tries each bake three times.
 bake() {
     local write=$1
     shift
@@ -974,11 +975,12 @@ build() {
 # copies byte for byte. Then it loads them into rootless podman's storage
 # as LOCAL and LOCAL_AI, which the test and the scan run. plain first and
 # alone, then ai FROM its layout (docker-bake.hcl's DEVCONTAINER_PLAIN), as
-# bake_base does the runtime: ai is plain with a few layers on top, so under
-# them it has the plain image's layers, every one, fresh or not, whatever
-# the cache holds. Its steps' cache goes by those layers. Baked in one bake,
-# of a plain stage of its own, ai's steps found their cache from before on
-# a fresh run, built on the plain before, and ai came out on that plain.
+# bake_base does the runtime and build.sh devcontainer does into docker's
+# image store: ai is plain with a few layers on top, so under them it has
+# the plain image's layers, every one, fresh or not, whatever the cache
+# holds. Its steps' cache goes by those layers. Baked in one bake, of a
+# plain stage of its own, ai's steps found their cache from before on a
+# fresh run, built on the plain before, and ai came out on that plain.
 devcontainer() {
     : "${EVENT:?}" "${GITHUB_REPOSITORY_OWNER:?}" "${LOCAL:?}" "${LOCAL_AI:?}"
     bake devcontainer-plain \

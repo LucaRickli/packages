@@ -11,7 +11,8 @@
 #   - the Fedora release of the branch
 #   - the runtime's environment, which the SDK's image has from the
 #     runtime's labels
-#   - flatpak's own ld.so.conf, and the libraries VS Code links, in its cache
+#   - flatpak's own ld.so.conf, and the libraries VS Code links or loads, in
+#     its cache
 #   - the fonts, from the runtime's caches, still valid as deployed
 #     (fontconfig writes none)
 #   - the rpm database, which the scan asks
@@ -38,15 +39,17 @@ test "$GBM_BACKENDS_PATH" = /usr/lib64/GL/lib/gbm:/usr/lib64/gbm
 test -f /usr/etc/ld.so.conf && test ! -s /usr/etc/ld.so.conf
 grep -qxF 'include /run/flatpak/ld.so.conf.d/runtime-*.conf' /etc/ld.so.conf
 test -d /usr/lib64/GL && test "$(readlink /etc/glvnd)" = ../lib64/GL/glvnd && test "$(readlink /etc/vulkan)" = ../lib64/GL/vulkan
-# OpenSSL's major version, the command's: its libraries are named for it
-# (libssl.so.3 with OpenSSL 3, Fedora 44; libssl.so.4 with OpenSSL 4,
-# Fedora 45), and the program built against its headers below reports it.
-openssl_major=$(openssl version | sed -n 's/^OpenSSL \([0-9][0-9]*\)\..*/\1/p')
-test -n "$openssl_major"
+# The libraries VS Code links, and OpenSSL 3's, which it loads itself
+# (dlopen, which no ldd check sees): vsce-sign, which checks the signature
+# of every extension from the Marketplace, and the Copilot SDK take no
+# OpenSSL newer than 3. Without them, as on Fedora 45 (whose own is OpenSSL
+# 4) before the Containerfile installed them by soname, every install from
+# the Marketplace fails: "Signature verification failed with 'UnknownError'
+# error".
 cache=$(ldconfig -p)
 for lib in libnss3.so libnssutil3.so libsmime3.so libnspr4.so libplc4.so libplds4.so libxkbfile.so.1 \
     libgtk-3.so.0 libgbm.so.1 libasound.so.2 libdbus-1.so.3 libsecret-1.so.0 libsystemd.so.0 \
-    libstdc++.so.6 "libssl.so.$openssl_major"; do
+    libstdc++.so.6 libssl.so.3 libcrypto.so.3; do
     # Not grep -q, which would stop reading and leave printf a broken pipe.
     printf '%s\n' "$cache" | grep "^[[:space:]]$lib " >/dev/null || { echo "not in the ld.so cache: $lib" >&2; exit 1; }
 done
@@ -77,9 +80,10 @@ for tool in cc c++ make pkg-config cmake ninja meson autoconf automake autorecon
 done
 
 # --- The tools at work ---
-# A C program built against OpenSSL's headers and run, and a C++ one built
-# with make. gdb and strace run them, which needs the test app's devel
-# feature.
+# A C program built against OpenSSL's headers and run, which reports the
+# version of the command's OpenSSL (3 with Fedora 44, 4 with Fedora 45),
+# and a C++ one built with make. gdb and strace run them, which needs the
+# test app's devel feature.
 cd "$(mktemp -d)"
 cat >ssl.c <<'C'
 #include <openssl/crypto.h>
@@ -88,6 +92,8 @@ int main(void) { puts(OpenSSL_version(OPENSSL_VERSION)); return 0; }
 C
 # shellcheck disable=SC2046  # pkg-config's words, split
 cc -g -o ssl ssl.c $(pkg-config --cflags --libs openssl)
+openssl_major=$(openssl version | sed -n 's/^OpenSSL \([0-9][0-9]*\)\..*/\1/p')
+test -n "$openssl_major"
 ./ssl | grep -q "^OpenSSL $openssl_major\."
 cat >hello.cc <<'CXX'
 #include <iostream>

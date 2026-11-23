@@ -24,7 +24,9 @@
 # its runtime first, into your own user installation.
 #
 # devcontainer builds the dev container, localhost/devcontainer:latest and
-# :ai, into docker's image store. bake runs docker buildx bake ARG... with
+# :ai, into docker's image store, as CI does (ci.sh devcontainer): plain
+# first and alone, also as an OCI image layout, output/images/devcontainer,
+# then ai FROM that image. bake runs docker buildx bake ARG... with
 # docker-bake.hcl, on the builder described below.
 #
 # How it builds:
@@ -334,6 +336,20 @@ install_flatpaks() {
     done
 }
 
+# devcontainer: bakes the dev container's two images into docker's image
+# store: plain first and alone, also into its layout, then ai FROM that
+# layout (docker-bake.hcl's DEVCONTAINER_PLAIN). ai's steps' cache then
+# goes by the plain image's layers, and ai is on that plain, whatever the
+# builder's cache holds. In one bake of both, on plain's build
+# (target:devcontainer-plain), that cache would go by plain's steps, which
+# is why the bake file builds ai without it there.
+devcontainer() {
+    bake --set devcontainer-plain.output=type=docker \
+        --set devcontainer-plain.output=type=oci,dest=output/images/devcontainer,tar=false \
+        devcontainer-plain
+    DEVCONTAINER_PLAIN="oci-layout://$PWD/output/images/devcontainer" bake devcontainer-ai
+}
+
 # --- main ---
 
 main() {
@@ -353,7 +369,7 @@ main() {
         build_flatpaks "${every_name[@]}"
         ;;
     install) install_flatpaks "${2:-}" ;;
-    devcontainer) bake devcontainer ;;
+    devcontainer) devcontainer ;;
     bake)
         shift
         bake "$@"
