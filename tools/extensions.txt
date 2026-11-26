@@ -18,4 +18,4 @@ denoland.vscode-deno 3.53.1 https://open-vsx.org/api/denoland/vscode-deno/{v}/fi
 # renovate: datasource=github-tags depName=bufbuild/vscode-buf
 bufbuild.vscode-buf 0.8.19 https://open-vsx.org/api/bufbuild/vscode-buf/{v}/file/bufbuild.vscode-buf-{v}.vsix https://open-vsx.org/api/bufbuild/vscode-buf/{v}/file/bufbuild.vscode-buf-{v}.sha256 bufbuild.vscode-buf-{v}.vsix:share/vscode/vsix/bufbuild.vscode-buf.vsix -
 # renovate: datasource=github-release-attachments depName=rust-lang/rust-analyzer versioning=regex:^(?<major>\d{4})-(?<minor>\d{2})-(?<patch>\d{2})$
-rust-lang.rust-analyzer 2026-11-16 https://github.com/rust-lang/rust-analyzer/releases/download/{v}/rust-analyzer-linux-x64.vsix sha256:257b7483a1203c0da8e50c6545d1f25c0084bffb800f0b456c415f49d57fc48c rust-analyzer-linux-x64.vsix:share/vscode/vsix/rust-lang.rust-analyzer.vsix -
+rust-lang.rust-analyzer 2026-11-23 https://github.com/rust-lang/rust-analyzer/releases/download/{v}/rust-analyzer-linux-x64.vsix sha256:ba433f8f72c040483fcd0821973d02d00740a829b2a252a4750d143c19bbd368 rust-analyzer-linux-x64.vsix:share/vscode/vsix/rust-lang.rust-analyzer.vsix -
