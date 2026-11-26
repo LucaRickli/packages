@@ -49,7 +49,7 @@ kubectl-radar v1.21.1 https://github.com/skyhook-io/radar/releases/download/{v}/
 # renovate: datasource=github-releases depName=helm/helm
 helm v4.3.2 https://get.helm.sh/helm-{v}-linux-amd64.tar.gz .sha256sum linux-amd64/helm linux-amd64/LICENSE
 # renovate: datasource=github-releases depName=helmfile/helmfile
-helmfile v1.8.4 https://github.com/helmfile/helmfile/releases/download/{v}/helmfile_{n}_linux_amd64.tar.gz https://github.com/helmfile/helmfile/releases/download/{v}/helmfile_{n}_checksums.txt helmfile LICENSE https://github.com/helmfile/helmfile/archive/refs/tags/{v}.tar.gz
+helmfile v1.8.5 https://github.com/helmfile/helmfile/releases/download/{v}/helmfile_{n}_linux_amd64.tar.gz https://github.com/helmfile/helmfile/releases/download/{v}/helmfile_{n}_checksums.txt helmfile LICENSE https://github.com/helmfile/helmfile/archive/refs/tags/{v}.tar.gz
 # renovate: datasource=github-releases depName=fluxcd/flux2
 flux v2.10.1 https://github.com/fluxcd/flux2/releases/download/{v}/flux_{n}_linux_amd64.tar.gz https://github.com/fluxcd/flux2/releases/download/{v}/flux_{n}_checksums.txt flux https://raw.githubusercontent.com/fluxcd/flux2/{v}/LICENSE#sha256:c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4 https://github.com/fluxcd/flux2/archive/refs/tags/{v}.tar.gz
 # renovate: datasource=github-releases depName=siderolabs/talos
