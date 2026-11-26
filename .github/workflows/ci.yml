@@ -177,7 +177,7 @@ jobs:
     timeout-minutes: 15
     env:
       # renovate: datasource=github-releases depName=zizmorcore/zizmor
-      ZIZMOR_VERSION: "v1.33.0"
+      ZIZMOR_VERSION: "v1.33.1"
       # renovate: datasource=npm depName=renovate
       RENOVATE_VERSION: "44.257.9"
     steps:
