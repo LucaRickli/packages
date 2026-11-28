@@ -41,7 +41,7 @@
 
 # --- Kubernetes, Talos, containers, secrets ------------------------------------
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-kubectl v1.37.2 https://dl.k8s.io/release/{v}/bin/linux/amd64/kubectl .sha256 kubectl https://raw.githubusercontent.com/kubernetes/kubernetes/{v}/LICENSE#sha256:cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30
+kubectl v1.37.3 https://dl.k8s.io/release/{v}/bin/linux/amd64/kubectl .sha256 kubectl https://raw.githubusercontent.com/kubernetes/kubernetes/{v}/LICENSE#sha256:cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30
 # renovate: datasource=github-releases depName=int128/kubelogin
 kubelogin v1.36.4 https://github.com/int128/kubelogin/releases/download/{v}/kubelogin_linux_amd64.zip .sha256 kubelogin:kubectl-oidc_login LICENSE
 # renovate: datasource=github-releases depName=skyhook-io/radar
