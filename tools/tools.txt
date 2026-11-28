@@ -45,7 +45,7 @@ kubectl v1.37.2 https://dl.k8s.io/release/{v}/bin/linux/amd64/kubectl .sha256 ku
 # renovate: datasource=github-releases depName=int128/kubelogin
 kubelogin v1.36.4 https://github.com/int128/kubelogin/releases/download/{v}/kubelogin_linux_amd64.zip .sha256 kubelogin:kubectl-oidc_login LICENSE
 # renovate: datasource=github-releases depName=skyhook-io/radar
-kubectl-radar v1.21.2 https://github.com/skyhook-io/radar/releases/download/{v}/radar_{v}_linux_amd64.tar.gz https://github.com/skyhook-io/radar/releases/download/{v}/checksums.txt kubectl-radar LICENSE https://github.com/skyhook-io/radar/archive/refs/tags/{v}.tar.gz
+kubectl-radar v1.21.4 https://github.com/skyhook-io/radar/releases/download/{v}/radar_{v}_linux_amd64.tar.gz https://github.com/skyhook-io/radar/releases/download/{v}/checksums.txt kubectl-radar LICENSE https://github.com/skyhook-io/radar/archive/refs/tags/{v}.tar.gz
 # renovate: datasource=github-releases depName=helm/helm
 helm v4.3.2 https://get.helm.sh/helm-{v}-linux-amd64.tar.gz .sha256sum linux-amd64/helm linux-amd64/LICENSE
 # renovate: datasource=github-releases depName=helmfile/helmfile
@@ -67,7 +67,7 @@ sops v3.13.3 https://github.com/getsops/sops/releases/download/{v}/sops-{v}.linu
 # Signs and verifies the images (fedora-bootc's just cosign-keygen and just
 # verify).
 # renovate: datasource=github-releases depName=sigstore/cosign
-cosign v3.1.4 https://github.com/sigstore/cosign/releases/download/{v}/cosign-linux-amd64 https://github.com/sigstore/cosign/releases/download/{v}/cosign_checksums.txt cosign-linux-amd64:cosign https://raw.githubusercontent.com/sigstore/cosign/{v}/LICENSE#sha256:c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4,https://raw.githubusercontent.com/sigstore/cosign/{v}/COPYRIGHT.txt#sha256:6622d1d495e7d3a0e574c65e872f823cecbe585e25708d2223a28db016229119 https://github.com/sigstore/cosign/archive/refs/tags/{v}.tar.gz
+cosign v3.1.5 https://github.com/sigstore/cosign/releases/download/{v}/cosign-linux-amd64 https://github.com/sigstore/cosign/releases/download/{v}/cosign_checksums.txt cosign-linux-amd64:cosign https://raw.githubusercontent.com/sigstore/cosign/{v}/LICENSE#sha256:c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4,https://raw.githubusercontent.com/sigstore/cosign/{v}/COPYRIGHT.txt#sha256:6622d1d495e7d3a0e574c65e872f823cecbe585e25708d2223a28db016229119 https://github.com/sigstore/cosign/archive/refs/tags/{v}.tar.gz
 # Boots a bootc image in a throwaway VM (fedora-bootc's just qcow2 and just
 # demo-user). Both builds move it out of PATH, behind a bcvk that runs it on
 # the host, where the podman and qemu it drives are
